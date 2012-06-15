@@ -1,3 +1,8 @@
+/assets/less/
+/assets/PS/
+/assets/css/images/
+/assets/css/img
+/assets/fonts/
 */config/development
 */logs/log-*.php
 */logs/!index.html
