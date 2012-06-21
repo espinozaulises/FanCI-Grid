@@ -240,25 +240,25 @@ class MY_Pagination extends CI_Pagination {
 		switch ( $style ) {
 			case 'buttons':
 				// Content Pager
-				$this->full_tag_open 	= '<div class="btn-group">';
+				$this->full_tag_open 	= '<div class="pager-group">';
 				$this->full_tag_close	= '</div>';
 				// First
-				$this->first_tag_open	= '<span class="btn">';
+				$this->first_tag_open	= '<span class="pager-btn">';
 				$this->first_tag_close	= '</span>';
 				// Prev
-				$this->prev_tag_open	= '<span class="btn">';
+				$this->prev_tag_open	= '<span class="pager-btn">';
 				$this->prev_tag_close	= '</span>';
 				// Active link
-				$this->cur_tag_open		= '<span class="btn active">';
+				$this->cur_tag_open		= '<span class="pager-btn active">';
 				$this->cur_tag_close	= '</span>';
 				// Numbers
-				$this->num_tag_open		= '<span class="btn">';
+				$this->num_tag_open		= '<span class="pager-btn">';
 				$this->num_tag_close	= '</span>';
 				// Next
-				$this->next_tag_open	= '<span class="btn">';
+				$this->next_tag_open	= '<span class="pager-btn">';
 				$this->next_tag_close	= '</span>';
 				// Last
-				$this->last_tag_open	= '<span class="btn">';
+				$this->last_tag_open	= '<span class="pager-btn">';
 				$this->last_tag_close	= '</span>';
 
 				break;

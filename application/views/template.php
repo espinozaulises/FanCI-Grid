@@ -18,8 +18,8 @@
     <script>window.jQuery || document.write("<script src='<?=base_url();?>assets/js/jquery-1.7.2.min.js'><\/script>")</script>
 
     <script type="text/javascript" src="<?=base_url();?>assets/js/jquery.fanCIgrid.js"></script>
-    <script type="text/javascript" src="<?=base_url();?>assets/js/jquery.history.js"></script>
-    <script type="text/javascript" src="<?=base_url();?>assets/js/jquery.tipsy.js"></script>
+    <!-- <script type="text/javascript" src="<?=base_url();?>assets/js/jquery.history.js"></script>
+    <script type="text/javascript" src="<?=base_url();?>assets/js/jquery.tipsy.js"></script> -->
     <?=$scripts?>
 
     <style type="text/css">

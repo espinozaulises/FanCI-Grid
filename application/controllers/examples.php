@@ -9,15 +9,18 @@ class Examples extends CI_Controller {
 	
 		$this->load->library('fancigrid');
 	}
-	
-	function index()
+	function index() {
+		redirect('/examples/test/', 'refresh');
+	}
+
+	function test()
 	{
 		$sql["select"]  = "*";
 		$sql["from"]    = "fancigrid";
 		$sql["where"]   = "1";
 				
-		$config['base_url'] = base_url("examples/index");
-		$config['per_page'] = 15;
+		$config['base_url'] = base_url("examples/test");
+		$config['per_page'] = 20;
 		$config["num_links"] = 3;
 
 		$columns = array(
@@ -66,7 +69,7 @@ class Examples extends CI_Controller {
 		);
 		
 		$params = array(
-		            'url_site' 	=> base_url("examples"),
+		            'url_site' 	=> base_url("examples/test"),
 		            'columns' 	=> $columns,
 		            'actions' 	=> array("view","edit","trash"),
 		            'sql_query'	=> $sql,

@@ -12,7 +12,7 @@ class Fanci_model extends CI_Model
 	private $limit;
 	private $offset;
 	private $order;
-	private $order_type;
+	private $direction;
 	public $qry_un_limit;
 	public $count_rows;
 	
@@ -25,8 +25,8 @@ class Fanci_model extends CI_Model
 	public function initialize($params){
 		$this->limit  = $params["limit"];
 		$this->offset = $params["offset"];
-		$this->order  = $params["field_order"];
-		$this->order_type = $params["order"];
+		$this->order  = $params["ord_field"];
+		$this->direction = $params["ord_direction"];
 	}
 	
 	public function select($sql){
@@ -80,7 +80,8 @@ class Fanci_model extends CI_Model
 			}
 			//if( isset($sql["order_by"]) ){
 			//	$tmp = $sql["order_by"];
-				$order = " ORDER BY ".$this->order." ".$this->order_type;
+			if( !is_null($this->order) )
+				$order = " ORDER BY ".$this->order." ".$this->direction;
 			//}
 				
 			$this->qry_un_limit = "SELECT ".$sql["select"]." FROM ".$sql["from"].$where.$like;
@@ -97,7 +98,7 @@ class Fanci_model extends CI_Model
 	
 		if( isset($sql["where"]) ){
 			$where = " WHERE ".$sql["where"];
-			$where = $this->my_sprintf($where, $sql["vars"]);
+			//$where = $this->my_sprintf($where, $sql["vars"]);
 		}
 			
 
@@ -108,7 +109,8 @@ class Fanci_model extends CI_Model
 			if( ! empty($tmp[0]) and ! empty($tmp[1]) )
 				$like = " AND ".$this->db->escape_str($tmp[0])." LIKE '%".$this->db->escape_str($tmp[1])."%'";
 		}
-		$order = " ORDER BY ".$this->order." ".$this->order_type;
+		if( !is_null($this->order) )
+			$order = " ORDER BY ".$this->order." ".$this->direction;
 	
 		$this->qry_un_limit = "SELECT ".$sql["select"]." FROM ".$sql["from"].$where.$like;
 		return "SELECT ".$sql["select"]." FROM ".$sql["from"].$where.$like.$order.$limit;

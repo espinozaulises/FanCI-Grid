@@ -1,7 +1,6 @@
 <?php
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-
 /**
 * Based on the original library
 *
@@ -324,8 +323,8 @@ class MY_Table extends CI_Table {
 		            'tfoot_close'   		=> '</tfoot>',
 		            'footing_row_start'   	=> '<tr>',
 		            'footing_row_end'     	=> '</tr>',
-		            'footing_cell_start'  	=> '<th>',
-		            'footing_cell_end'    	=> '</th>',
+		            'footing_cell_start'  	=> '<td>',
+		            'footing_cell_end'    	=> '</td>',
 
 					'table_close'			=> '</table>'
 				);

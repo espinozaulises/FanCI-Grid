@@ -18,7 +18,7 @@ class Fancigrid
 	public $columns 	= array(); 	// Arreglo que contiene las columnas y sus opciones
 	public $extra_params= 0;		// Valores de las variables extra por default 
 	public $grid_name	= 'fanCIgrid';
-	public $my_segment	= 3;		// El segmento de la URI en el cual pasamos los valores de los filtros.
+	public $my_segment	= 3;		// El segmento de la URI a partir del que pasaremos los datos.
 	public $pagination 	= array();	// Parametros de la librería pagination. base_url y per_page
 	public $prim_key	= "id";		// Nombre del campo de clave primaria por default.
 	public $prim_key_hide = true;	// Esconder/mostrar el id en el grid.
@@ -64,17 +64,7 @@ class Fancigrid
 		$this->CI->load->helper(array('fanci_helper','security'));
 		$this->CI->load->model("fanci_model");
 
-		log_message('debug', "FanCIGrid Class Initialized");
-
-
-		// TEMPLATE POR DEFAULT DE LA TABLA DEL GRID
-		$tmpl = array ( 
-			'table_open'  => "<table class='fancigrid grid-border' id='". $this->grid_name ."'>" 
-		);
-
-		// Cargamos el template por default
-		$this->CI->table->set_template($tmpl);
-		
+		log_message('debug', "FanCIGrid Class Initialized");		
 	}
 
 	// --------------------------------------------------------------------
@@ -88,7 +78,7 @@ class Fancigrid
 	 * @param	type
 	 * @return	type
 	 */
-	function _set_headers()
+	private function _set_headers()
 	{
 		$i = 0;
 		$args = $this->columns;
@@ -134,7 +124,7 @@ class Fancigrid
 		$this->columns = $args;
 	}
 
-	function _get_headers()
+	private function _get_headers()
 	{
 		$cols = "";
 		$cont = 0;
@@ -147,7 +137,7 @@ class Fancigrid
 		return $cols;
 	}
 
-	function _get_sorter($key, $data)
+	private function _get_sorter($key, $data)
 	{
 		if( $data["sorter"] ) {
 			return '<a class="sorter-grid" href="'.$data["field"].'" title="Click para ordenar ASC/DESC.">'.$data["data"].'</a>';
@@ -157,7 +147,7 @@ class Fancigrid
 		}
 	}	
 
-	function _clear_id(  $str ){
+	private function _clear_id(  $str ){
 		$str = str_replace(' ', '', $str);
 		$str = str_replace('.', '', $str);
 		$str = str_replace('/', '', $str);
@@ -166,7 +156,7 @@ class Fancigrid
 	/**
 	 * Decode
 	 **/
-	function decode($string)
+	private function decode($string)
 	{
 		return base64_decode(strtr($string, '%.~', '+/='));
 	}
@@ -174,7 +164,7 @@ class Fancigrid
 	/**
 	 * Encode
 	 **/
-	function encode($string)
+	private function encode($string)
 	{
 		return strtr(base64_encode($string), '+/=', '%.~');
 	}
@@ -182,14 +172,14 @@ class Fancigrid
 	/*
 	 * BOTONES DE LAS TABLAS
 	* */
-	function table_buttons($uri='', $title='', $ico, $attributes=''){
+	private function table_buttons($uri='', $title='', $ico, $attributes=''){
 		if($attributes=='')
 			$attributes = array("class" => "ttipL", 'title' => $title); 
 
 		return anchor($this->url_site.$uri , '<span class="sprite '.$ico.'"></span>', $attributes);
 	}
 
-	function _set_actions($id, $btn){
+	private function _set_actions($id, $btn){
 
 		$botones = "";
 		
@@ -224,119 +214,26 @@ class Fancigrid
 	 * @param	mixed
 	 * @return	string
 	 */
-	public function _define_limits(){
+	private function define_limits(){
 		//Definiendo los límites
+		$page_segment = $this->CI->uri->segment($this->my_segment);
+		if( ! isset($this->pagination["per_page"]) )
+			$this->pagination["per_page"] = 10;
+		$this->sql_query["limit"] 		= $this->pagination["per_page"];
+		$this->sql_query["offset"] 		= (int)$page_segment;
+		$this->sql_query["ord_field"]	= NULL;
+		$this->sql_query["ord_direction"]= NULL;
+
+		// Comprobamos si además de la paginación existen más variables.
+		
+		$vars_segment = $this->CI->uri->segment($this->my_segment+1);
+
+		if( $vars_segment ){
+
+		}
+
 		$this->segment = $this->CI->uri->segment($this->my_segment);
 		
-		if( ! empty($this->segment) )
-			$uri_params = explode("-", $this->segment);
-		/* Si per_page ha sido configurado en el controlador... */
-		if( ! empty($this->pagination["per_page"]) )
-			$this->CI->config->set_item('per_page', $this->pagination["per_page"]);
-
-		$per_page = $this->CI->config->item('per_page');
-		
-		if ( isset($uri_params[0]) )
-			$this->sql_query["offset"] = $this->CI->security->xss_clean($this->CI->db->escape_str($uri_params[0]));
-		else 
-			$this->sql_query["offset"] 	= "0";
-		
-		if ( isset($uri_params[1]) ){
-			$tmp = $this->CI->security->xss_clean($this->CI->db->escape_str($uri_params[1]));
-			$tmp = ( $tmp == "all" ) ? "10000" : $tmp;
-			$this->sql_query["limit"] = $tmp;
-		}
-		else
-			$this->sql_query["limit"]  	= $per_page;
-		
-		if ( isset($uri_params[2]) )
-		{
-			$this->uri["field_order"] = $this->CI->security->xss_clean($this->CI->db->escape_str($uri_params[2]));
-			$tmp = $this->columns[$uri_params[2]];
-			$this->sql_query["field_order"] = $this->CI->security->xss_clean($this->CI->db->escape_str($tmp["field"]));
-		}
-		else 
-		{
-			$this->sql_query["field_order"] = $this->prim_key;
-			$this->uri["field_order"] = 1;
-			foreach ($this->columns as $key => $val)
-			{
-				if( is_array($val) )	{
-					if( array_key_exists("order",$val) ){
-						$this->sql_query["field_order"] = $val["field"];
-						$this->sql_query["order"] = $val["order"];
-						$this->uri["field_order"] = $key;
-					}
-				}
-			}
-
-		}
-		
-		if ( isset($uri_params[3]) )	{
-			$tmp = $this->CI->security->xss_clean($this->CI->db->escape_str($uri_params[3]));
-			if( $tmp == self::O_ASC || $tmp == self::O_DESC)
-				$this->sql_query["order"] = $tmp;
-			else
-				$this->sql_query["order"] = self::O_ASC;
-		}
-		elseif ( ! isset($this->sql_query["order"]) ) {
-			$this->sql_query["order"] = self::O_ASC;
-		}
-		
-		if ( isset($uri_params[4]) ){
-			if( $uri_params[4] == "none" )
-			{
-				$this->sql_query["like"] = "";
-				$this->uri["like_string"] = "none";
-		
-			} else {
-		
-				$this->uri["like_string"] = $uri_params[4];
-				$vars = explode(":", $uri_params[4]);
-		
-				$vars[0] = $this->columns[$vars[0]]["field"];
-				$vars[1] = $this->CI->security->xss_clean($this->CI->db->escape_str($this->decode($vars[1])));
-				$this->sql_query["like"] = $vars;
-		
-			}
-		}
-		else	{
-			$this->sql_query["like"]	= "";
-			$this->uri["like_string"] = "none";
-		}
-		
-		if ( isset($uri_params[5]) ){
-			if( $uri_params[5] == "none" )
-			{
-				$this->uri["vars_url"] = $this->extra_params;
-				$this->sql_query["vars"] = $this->extra_params;
-			}
-			else
-			{
-				$vars = explode(":", $uri_params[5]);
-				foreach ($vars as $key => $val)
-				{
-					$vars[$key] = $this->CI->security->xss_clean($this->CI->db->escape_str($val));
-				}
-				$this->sql_query["vars"] = $vars;
-				$this->uri["vars_url"] = $uri_params[5];
-			}
-		}
-		else
-		{
-			$this->sql_query["vars"] = $this->extra_params;
-			$this->uri["vars_url"] = $this->extra_params;
-		}
-		// INICIALIZANDO los datos del arreglo que contiene los datos de la URL
-		$this->uri["base_url"]  = $this->url_site;
-		$this->uri["limit"]  	= $this->sql_query["limit"];
-		$this->uri["offset"] 	= $this->sql_query["offset"];
-		$this->uri["order"]		= $this->sql_query["order"];
-		//$this->uri["like_string"]=$this->uri["like_string"];
-		$this->uri["hash"]		= $this->sql_query["offset"]."-".$this->sql_query["limit"].'-'.$this->uri["field_order"].'-'.$this->uri["order"].'-'.$this->uri["like_string"].'-'.$this->uri["vars_url"];
-		$this->uri["hash_init"]	= "0-".$this->sql_query["limit"]."-".$this->uri["field_order"].'-'.$this->uri["order"];
-
-		//$this->uri["vars"]      = $this->uri["vars_url"];
 	}
 
 	// --------------------------------------------------------------------
@@ -356,10 +253,18 @@ class Fancigrid
 		}
 
 		$this->_set_headers();
-		$this->_define_limits();
+		$this->define_limits();
 		
 		$this->CI->fanci_model->initialize( $this->sql_query );
 		$this->sql_string = $this->CI->fanci_model->set_query( $this->sql_query );
+
+				// TEMPLATE POR DEFAULT DE LA TABLA DEL GRID
+		$tmpl = array ( 
+			'table_open'  => "<table class='fancigrid grid-border' id='". $this->grid_name ."'>" 
+		);
+
+		// Cargamos el template por default
+		$this->CI->table->set_template($tmpl);
 
 	}
 
@@ -431,45 +336,24 @@ class Fancigrid
 				if( is_numeric($value) ) {
 					$monto = $this->_parser_format( "money", $value );
 					$totales[$key] = array("data" => $monto, "class" => "totales" );
+				} else {
+					$totales[$key] = array("data" => "&nbsp;");
 				}
 			}
-			$this->CI->table->add_row($totales);
+			foreach ($this->actions as $value) {
+				$totales[] = array("data" => "&nbsp;"); 
+			}
+			$this->CI->table->set_footing($totales);
 		}
 
-		$this->pagination['per_page'] = $this->uri["limit"];
+		$this->pagination['per_page'] = $this->sql_query["limit"];
 		$this->pagination['total_rows'] = $this->CI->fanci_model->count_rows();
-		//$this->CI->$this->load->library('pagination');
-		
-		/*$config['base_url'] = 'url';
-		$config['total_rows'] = 100;
-		$config['per_page'] = 10;
-		$config['uri_segment'] = 3;
-		$config['num_links'] = 3;
-		$config['full_tag_open'] = '<p>';
-		$config['full_tag_close'] = '</p>';
-		$config['first_link'] = 'First';
-		$config['first_tag_open'] = '<div>';
-		$config['first_tag_close'] = '</div>';
-		$config['last_link'] = 'Last';
-		$config['last_tag_open'] = '<div>';
-		$config['last_tag_close'] = '</div>';
-		$config['next_link'] = '&gt;';
-		$config['next_tag_open'] = '<div>';
-		$config['next_tag_close'] = '</div>';
-		$config['prev_link'] = '&lt;';
-		$config['prev_tag_open'] = '<div>';
-		$config['prev_tag_close'] = '</div>';
-		$config['cur_tag_open'] = '<b>';
-		$config['cur_tag_close'] = '</b>';*/
-		
-		$config['total_rows'] = 300;
-		$this->CI->pagination->initialize($config);
-		
-		//echo $this->CI->pagination->create_links();
+		$this->pagination['uri_segment'] = $this->my_segment;
 
-		//$footing = array("data" => $this->CI->fancipager->create_links($this->uri), "colspan" => $this->cont_fields-1, "class" => "pager");
-		//$this->CI->table->set_footing("",$footing);
+		$this->CI->pagination->initialize($this->pagination);
+		
 
+		/*
 		$div_params = '<div id="grid_params" style="display:none">
 						<div id = "url_site">'		.$this->url_site.'</div>
 						<div id = "dg_url">'		.$this->pagination["base_url"].'</div>
@@ -482,6 +366,7 @@ class Fancigrid
 						<div id = "dg_hash">'		.$this->uri["hash"].'</div>
 						<div id = "dg_hash_init">'	.$this->uri["hash_init"].'</div>
 					  </div> <!-- Close grid_params -->'."\n";
+					  */
 
 		$gridW 	 = '<div class="grid-container">'."\n";
 		$gridW 	.= '<div class="the-table">'."\n";
@@ -497,7 +382,7 @@ class Fancigrid
 		$footerW 	.= '</div><!-- Close counter -->'."\n";
 		$footerW 	.= '</div> <!-- Close the-footer -->'."\n";
 		$footerW 	.= '</div> <!-- Close grid-container -->'."\n";
-		$footerW 	.= $div_params;
+		//$footerW 	.= $div_params;
 
 		return $gridW . $fancigrid . $footerW;
 	}
@@ -505,14 +390,29 @@ class Fancigrid
 	// Genera el contador de resultados para el footer.
 	private function label_counter(){
 
-		$current = $this->CI->pagination->cur_page;
-		$from 	 = $this->CI->pagination->per_page;
+		$current = $this->sql_query["offset"]+1;
+		$from 	 = $this->sql_query["offset"]+$this->pagination["per_page"];
 		$total 	 = $this->CI->pagination->total_rows ;
-		$texto = sprintf("Mostrando del %d al %d de %d resultados.",$current, $from, $total);
+		$texto = sprintf("del %d al %d de %d resultados.",$current, $from, $total);
 
 		return $texto;
 	}
 
+	/**
+	* Convierte un objeto y todos sus elementos a un arreglo.
+	*
+	* @param mixed $obj
+	* @return array
+	*/
+	private function Obj2Array($obj) {
+		if ( is_object ( $obj ) )
+			$obj = get_object_vars ( $obj );
+		if ( is_array ( $obj ) ) {
+			foreach ( $obj as $key => $value )
+				$obj[$key] =  Obj2Array( $obj [$key] );
+		}
+		return $obj;
+	}
 	private function sel_page_size() {
 		$this->CI->load->helper('form');
 		$options = array (
@@ -523,10 +423,9 @@ class Fancigrid
 			'250' => "250",
 			$this->CI->pagination->total_rows => "Todo",
 			);
-		$label  = form_label("Ver:","sel_page_size");
-		$select = form_dropdown('sel_page_size', $options, '10','id="sel_page_size" class="fg-page-size"');
+		$label  = form_label("Mostrar: ","sel_page_size");
+		$select = form_dropdown('sel_page_size', $options, "{$this->pagination["per_page"]}",'id="sel_page_size" class="fg-page-size"');
 		return $label.$select;
-		//return '<select class="fg-page-size" name="sel_page_size"><option selected="selected" value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></select>'
 	}
 
 
